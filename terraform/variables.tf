@@ -8,13 +8,3 @@ variable "gcp_region" {
   type        = string
   default     = "europe-west1"
 }
-
-variable "ssh_user" {
-  description = "Utilisateur SSH"
-  type        = string
-}
-
-variable "ssh_public_key" {
-  description = "Chemin vers la clé publique SSH"
-  type        = string
-}
