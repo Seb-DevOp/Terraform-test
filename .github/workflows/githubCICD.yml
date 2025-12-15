@@ -4,30 +4,41 @@ on:
   push:
     branches:
       - main
+      
 jobs:
   terraform:
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
-      id-token: 'write' # Nécessaire pour l'authentification workload identity
+      id-token: 'write' # Nécessaire pour l'authentification Workload Identity
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 🔑 Étape d'authentification Google Cloud
+      # 🔑 Authentification Google Cloud (via Service Account Key en secret)
       - id: 'auth'
+        name: Authenticate to GCP
         uses: 'google-github-actions/auth@v2'
         with:
-          credentials_json: ${{ secrets.GCP_TOKEN }} # Utilise directement votre secret
+          credentials_json: ${{ secrets.GCP_TOKEN }}
+
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+
       - name: Terraform Init
         run: terraform init
+        working-directory: ./terraform 
 
-      - name: Terraform plan
+
+      - name: Terraform Plan
         run: terraform plan
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
+        working-directory: ./terraform
+
+
+ #     - name: Terraform Apply
+ #       run: terraform apply -auto-approve
+ #       working-directory: ./terraform
