@@ -1,7 +1,8 @@
 terraform {
   backend "gcs" {
     bucket = "bucket_tfstate"
-    prefix = "stockage_de_TFstate/Rocky_VM.tfstate"
+    prefix = "stockage_de_TFstate"
+    key = "rocky.tfstate"
   }
 }
   
