@@ -15,7 +15,7 @@ resource "google_compute_instance" "vm" {
   name         = "rocky-vm"
   machine_type = "e2-medium"
   zone         = var.gcp_zone
-  tags         = ["ssh"]
+
 
   boot_disk {
     initialize_params {
@@ -27,8 +27,4 @@ resource "google_compute_instance" "vm" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.subnet.id}
-
-  metadata = {
-    ssh-keys = "${var.ssh_user}:${file(var.ssh_public_key)}"
-  }
 }
