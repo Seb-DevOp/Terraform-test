@@ -1,6 +1,3 @@
-gcp_project_id = "terraform-test-481313"
-gcp_region     = "europe-west1"
-
 resource "google_compute_network" "vpc" {
   name                    = "TestTerraform-vpc"
   auto_create_subnetworks = false
