@@ -35,7 +35,7 @@ jobs:
 
       - name: Terraform Plan
         run: |
-          terraform plan -var-file=terraform.tfvars
+          terraform plan -var-file=./terraform/terraform.tfvars
         working-directory: ./terraform
 
 
