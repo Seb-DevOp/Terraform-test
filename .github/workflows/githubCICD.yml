@@ -1,0 +1,31 @@
+name: Deploy GCP VM with Terraform
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 🔑 Étape cruciale pour l'authentification
+      - name: Set up GCP Credentials
+        run: echo "GOOGLE_CREDENTIALS=$GCP_TOKEN" >> $GITHUB_ENV
+        env:
+          GCP_TOKEN: ${{ secrets.GCP_TOKEN }} # Récupère le secret GitHub
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
