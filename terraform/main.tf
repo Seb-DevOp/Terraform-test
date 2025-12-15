@@ -24,4 +24,4 @@ resource "google_compute_instance" "vm" {
       type  = "pd-balanced"
     }
   }
-
+}
