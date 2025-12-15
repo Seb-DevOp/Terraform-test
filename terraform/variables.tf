@@ -1,5 +1,5 @@
 variable "gcp_project_id" {
-  description = "terraform-test-481313"
+  description = "project ID"
   type        = string
 }
 
