@@ -13,3 +13,8 @@ variable "gcp_region" {
   type        = string
   default     = "europe-west1-b"
 }
+
+variable "env" {
+  description = "L'environnement (dev ou prod)"
+  type        = string
+}
