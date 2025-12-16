@@ -1,13 +1,8 @@
-resource "google_compute_network" "vpc" {
-  name                    = "test-terraform-vpc"
-  auto_create_subnetworks = false
-}
-
-resource "google_compute_subnetwork" "subnet" {
-  name          = "rocky-subnet"
-  ip_cidr_range = "10.10.0.0/24"
-  region        = var.gcp_region
-  network       = google_compute_network.vpc.id
+module "google_compute_instance_template" {
+  source = "./modules" 
+  env           = var.environnement
+  network_id    = google_compute_network.vpc.id
+  subnetwork_id = google_compute_subnetwork.subnet.id
 }
 
 
@@ -19,7 +14,7 @@ resource "google_compute_instance" "vm" {
 
   boot_disk {
     initialize_params {
-      image = "rocky-linux-cloud/rocky-linux-9"
+      image = "var.source_image"
       size  = 50
       type  = "pd-balanced"
     }
