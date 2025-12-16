@@ -1,5 +1,5 @@
 resource "google_compute_network" "vpc" {
-  name                    = "TestTerraform-vpc"
+  name                    = "test-terraform-vpc"
   auto_create_subnetworks = false
 }
 
