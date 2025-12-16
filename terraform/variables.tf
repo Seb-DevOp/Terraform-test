@@ -20,9 +20,9 @@ variable "env" {
 }
 
 variable "student_name" {
-  description = "Nom de l'etudiant utilisé pour le nommage (sans espaces)"
+  description = "Nom du Createur"
   type        = string
-  default     = "nometudiant"
+  default     = "Seb"
 }
 
 variable "vm_ip" {

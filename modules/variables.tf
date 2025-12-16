@@ -32,7 +32,7 @@ variable "image" {
 }
 
 variable "disk_size" {
-	description = "Taille disque boot (GB)"
+	description = "Taille disque boot"
 	type        = number
 	default     = 50
 }

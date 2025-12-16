@@ -9,5 +9,4 @@ module "vm_module" {
   zone         = var.gcp_zone
   vm_ip = var.vm_ip
 
-  # On utilise les valeurs par défaut pour image/machine_type/disk_size
 }

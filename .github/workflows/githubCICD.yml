@@ -65,3 +65,6 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -var-file=prod/Prod.tfvars
+
+      - name: Terraform destroy
+        run: terraform destroy -var-file=prod/Prod.tfvars -auto-approve
