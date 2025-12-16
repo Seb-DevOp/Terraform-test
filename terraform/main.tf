@@ -1,5 +1,5 @@
 module "google_compute_instance_template" {
-  source = "./modules" 
+  source = "../modules" 
   env           = var.environnement
   network_id    = google_compute_network.vpc.id
   subnetwork_id = google_compute_subnetwork.subnet.id
