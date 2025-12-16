@@ -1,18 +1,79 @@
-resource "google_compute_instance_template" "default" {
-  # Utilisation de l'interpolation ${var.env}
-  name         = "test-terraform-${var.env}-template"
-  machine_type = "e2-medium"
+locals {
+  vpc_name     = lower("VPC-${var.student_name}-${var.env}")
+  subnet_name  = lower("subnet-${var.student_name}-${var.env}")
+  vm_name      = lower("VM-${var.student_name}-${var.env}")
+  storage_name = lower("storage-${var.student_name}-${var.env}")
+}
 
+resource "google_compute_network" "vpc" {
+  name                    = local.vpc_name
+  auto_create_subnetworks = false
+}
 
-  disk {
-    source_image = "debian-cloud/debian-11"
-    auto_delete  = true
-    boot         = true
-  } 
+resource "google_compute_subnetwork" "subnet" {
+  name          = local.subnet_name
+  ip_cidr_range = var.subnet_cidr
+  region        = var.region
+  network       = google_compute_network.vpc.id
+}
 
+resource "google_compute_instance" "vm" {
+  name         = local.vm_name
+  machine_type = var.machine_type
+  zone         = var.zone
+
+  boot_disk {
+    initialize_params {
+      image = var.image
+      size  = var.disk_size
+      type  = "pd-balanced"
+    }
+  }
 
   network_interface {
-    network    = var.network_id
-    subnetwork = var.subnetwork_id
+    network    = google_compute_network.vpc.self_link
+    subnetwork = google_compute_subnetwork.subnet.self_link
+    network_ip = var.vm_ip == "" ? null : var.vm_ip
+
+    dynamic "access_config" {
+      for_each = var.assign_public_ip ? [1] : []
+      content {}
+    }
+  }
+
+  labels = {
+    environment = var.env
+    student     = var.student_name
   }
 }
+
+resource "google_storage_bucket" "bucket" {
+  name          = local.storage_name
+  location      = var.region
+  force_destroy = true
+}
+
+output "vpc_name" {
+  value = google_compute_network.vpc.name
+}
+
+output "subnet_name" {
+  value = google_compute_subnetwork.subnet.name
+}
+
+output "vm_name" {
+  value = google_compute_instance.vm.name
+}
+
+output "vm_internal_ip" {
+  value = google_compute_instance.vm.network_interface[0].network_ip
+}
+
+output "vm_public_ip" {
+  value = try(google_compute_instance.vm.network_interface[0].access_config[0].nat_ip, null)
+}
+
+output "storage_name" {
+  value = google_storage_bucket.bucket.name
+}
+

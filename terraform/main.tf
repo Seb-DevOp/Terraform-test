@@ -1,31 +1,13 @@
-module "google_compute_instance_template" {
-  source = "../modules" 
-  env           = var.env
-  network_id    = google_compute_instance_template.vpc.id
-  subnetwork_id = google_compute_instance_template.subnet.id
-}
+# terraform/main.tf
 
+module "vm_module" {
+  source = "../modules"
 
-resource "google_compute_instance" "vm" {
-  name         = "rocky-vm"
-  machine_type = "e2-medium"
+  student_name = var.student_name
+  env          = var.env
+  region       = var.gcp_region
   zone         = var.gcp_zone
+  vm_ip = var.vm_ip
 
-
-  boot_disk {
-    initialize_params {
-      image = "google_compute_instance_template.source_image"
-      size  = 50
-      type  = "pd-balanced"
-    }
-  }
-
-network_interface {
-    network = "default"
-
-    # Optionnel : ajouter access_config pour donner une IP publique à la VM
-    access_config {
-      // Laisser vide pour une IP éphémère
-    }
-  }
+  # On utilise les valeurs par défaut pour image/machine_type/disk_size
 }
