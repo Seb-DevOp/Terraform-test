@@ -24,4 +24,13 @@ resource "google_compute_instance" "vm" {
       type  = "pd-balanced"
     }
   }
+
+network_interface {
+    network = "default"
+
+    # Optionnel : ajouter access_config pour donner une IP publique à la VM
+    access_config {
+      // Laisser vide pour une IP éphémère
+    }
+  }
 }
