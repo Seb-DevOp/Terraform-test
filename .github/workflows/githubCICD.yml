@@ -33,7 +33,7 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
-        run: terraform plan -var-file=terraform.tfvars
+        run: terraform plan -var-file=./prod/prod.tfvars
 
   apply:
     name: "Terraform Apply"
@@ -64,4 +64,4 @@ jobs:
         run: terraform init
 
       - name: Terraform Apply
-        run: terraform apply -var-file=terraform.tfvars
+        run: terraform apply -var-file=./prod/prod.tfvars
