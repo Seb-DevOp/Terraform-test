@@ -65,3 +65,33 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -var-file=prod/Prod.tfvars -auto-approve
+  destroy:
+        name: "Terraform Destroy"
+        runs-on: ubuntu-latest
+        needs: apply # S'assure que le destroy ne peut être lancé qu'après un déploiement réussi
+        environment: production # Créez cet environnement pour demander une validation
+        permissions:
+          contents: 'read'
+          id-token: 'write'
+        defaults:
+          run:
+            working-directory: ./terraform
+
+        steps:
+          - name: Checkout Code
+            uses: actions/checkout@v4
+
+          - id: 'auth'
+            name: Authenticate to GCP
+            uses: 'google-github-actions/auth@v2'
+            with:
+              credentials_json: ${{ secrets.GCP_TOKEN }}
+
+          - name: Setup Terraform
+            uses: hashicorp/setup-terraform@v3
+
+          - name: Terraform Init
+            run: terraform init
+
+          - name: Terraform Destroy
+            run: terraform destroy -var-file=prod/Prod.tfvars -auto-approve
