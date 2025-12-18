@@ -1,10 +1,6 @@
 name: Deploy GCP VM with Terraform
 
 on:
-  push:
-    branches:
-      - main
-  # Permet de déclencher la destruction manuellement sans attendre un push
   workflow_dispatch:
     inputs:
       env:
@@ -18,124 +14,64 @@ on:
         default: false
 
 jobs:
-  plan:
-    name: "Terraform Plan"
+  terraform:
+    name: Terraform (plan → apply|destroy)
     runs-on: ubuntu-latest
-    permissions:
-      contents: 'read'
-      id-token: 'write'
     defaults:
       run:
         working-directory: ./terraform
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - id: 'auth'
-        name: Authenticate to GCP
-        uses: 'google-github-actions/auth@v2'
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_TOKEN }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Set TF env and var-file
+      - name: Resolve env and tfvars file
+        id: resolve
         run: |
-          echo "TF_ENV=${{ github.event.inputs.env || 'dev' }}" >> $GITHUB_ENV
+          TF_ENV="${{ github.event.inputs.env || 'dev' }}"
           if [ "${TF_ENV}" = "prod" ]; then
-            echo "TF_VARS_FILE=${TF_ENV}/prod.tfvars" >> $GITHUB_ENV
+            if [ -f "${TF_ENV}/prod.tfvars" ]; then
+              VF="${TF_ENV}/prod.tfvars"
+            elif [ -f "${TF_ENV}/Prod.tfvars" ]; then
+              VF="${TF_ENV}/Prod.tfvars"
+            else
+              VF="${TF_ENV}/prod.tfvars"
+            fi
           else
-            echo "TF_VARS_FILE=${TF_ENV}/dev.tfvars" >> $GITHUB_ENV
+            if [ -f "${TF_ENV}/dev.tfvars" ]; then
+              VF="${TF_ENV}/dev.tfvars"
+            elif [ -f "${TF_ENV}/Dev.tfvars" ]; then
+              VF="${TF_ENV}/Dev.tfvars"
+            else
+              VF="${TF_ENV}/dev.tfvars"
+            fi
           fi
+          echo "TF_ENV=${TF_ENV}" >> $GITHUB_ENV
+          echo "TF_VARS_FILE=${VF}" >> $GITHUB_ENV
 
-      - name: Terraform Init (with backend config per env)
+      - name: Terraform init (backend configured by CI)
         run: |
           terraform init -backend-config="bucket=bucket_tfstate" -backend-config="prefix=stockage_de_TFstate/${TF_ENV}"
 
-      - name: Terraform Plan
-        run: terraform plan -var-file=${TF_VARS_FILE}
+      - name: Terraform plan
+        run: terraform plan -var-file="${TF_VARS_FILE}"
 
-  apply:
-    name: "Terraform Apply"
-    # Ne s'exécute QUE si on n'a pas coché la case de destruction
-    if: github.event.inputs.confirm_destroy != 'true'
-    runs-on: ubuntu-latest
-    needs: plan
-    environment: production
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-    defaults:
-      run:
-        working-directory: ./terraform
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - id: 'auth'
-        name: Authenticate to GCP
-        uses: 'google-github-actions/auth@v2'
-        with:
-          credentials_json: ${{ secrets.GCP_TOKEN }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Set TF env and var-file
+      - name: Apply or Destroy
         run: |
-          echo "TF_ENV=${{ github.event.inputs.env || 'dev' }}" >> $GITHUB_ENV
-          if [ "${TF_ENV}" = "prod" ]; then
-            echo "TF_VARS_FILE=${TF_ENV}/prod.tfvars" >> $GITHUB_ENV
+          if [ "${{ github.event.inputs.confirm_destroy }}" = "true" ]; then
+            echo "Running destroy using ${TF_VARS_FILE}"
+            terraform destroy -var-file="${TF_VARS_FILE}" -auto-approve
           else
-            echo "TF_VARS_FILE=${TF_ENV}/dev.tfvars" >> $GITHUB_ENV
+            echo "Running apply using ${TF_VARS_FILE}"
+            terraform apply -var-file="${TF_VARS_FILE}" -auto-approve
           fi
-
-      - name: Terraform Init (with backend config per env)
-        run: |
-          terraform init -backend-config="bucket=bucket_tfstate" -backend-config="prefix=stockage_de_TFstate/${TF_ENV}"
-
-      - name: Terraform Apply
-        run: terraform apply -var-file=${TF_VARS_FILE} -auto-approve
-
-  destroy:
-    name: "Terraform Destroy"
-    # Ne s'exécute QUE si la case "confirm_destroy" a été cochée manuellement
-    if: github.event.inputs.confirm_destroy == 'true'
-    runs-on: ubuntu-latest
-    needs: plan
-    environment: production
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-    defaults:
-      run:
-        working-directory: ./terraform
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - id: 'auth'
-        name: Authenticate to GCP
-        uses: 'google-github-actions/auth@v2'
-        with:
-          credentials_json: ${{ secrets.GCP_TOKEN }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Set TF env and var-file
-        run: |
-          echo "TF_ENV=${{ github.event.inputs.env || 'dev' }}" >> $GITHUB_ENV
-          if [ "${TF_ENV}" = "prod" ]; then
-            echo "TF_VARS_FILE=${TF_ENV}/prod.tfvars" >> $GITHUB_ENV
-          else
-            echo "TF_VARS_FILE=${TF_ENV}/dev.tfvars" >> $GITHUB_ENV
-          fi
-
-      - name: Terraform Init (with backend config per env)
-        run: |
-          terraform init -backend-config="bucket=bucket_tfstate" -backend-config="prefix=stockage_de_TFstate/${TF_ENV}"
-
-      - name: Terraform Destroy
-        run: terraform destroy -var-file=${TF_VARS_FILE} -auto-approve
