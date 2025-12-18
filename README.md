@@ -32,8 +32,23 @@ Pour supprimer l'infrastructure, vous devez déclencher la pipeline manuellement
 	- `providers.tf` : configuration du provider Google.
 	- `backend.tf` : backend `gcs` pour stocker l'état Terraform dans un bucket GCS.
 	- `variables.tf` : variables utilisées pour paramétrer le déploiement.
-- **State**: l'état Terraform est persistant dans un bucket GCS sur google.
+- **State**: l'état Terraform est persistant dans un bucket GCS.
+- **Séparation dev/prod**: la pipeline gère maintenant un `tfstate` distinct par environnement en utilisant un `prefix` différent dans le backend GCS (ex. `stockage_de_TFstate/dev` et `stockage_de_TFstate/prod`).
 - **Variables importantes**: `student_name`, `env`, `gcp_region`, `gcp_zone`, `vm_ip` permettent d'adapter les noms et la configuration des ressources.
 
 - **Remarques**: la VM est créée avec un disque d'amorçage, une option pour une IP publique éphémère, et le bucket est nommé en combinant `student_name` et `env`.
+
+**Comment utiliser la pipeline pour dev ou prod**
+
+- Pour lancer depuis l'interface GitHub Actions, cliquez sur **Run workflow** et choisissez l'input `env` (`dev` ou `prod`).
+Le workflow initialisera Terraform en passant le `bucket` et le `prefix` via `-backend-config` (donc le backend est défini par la pipeline). Il utilisera le fichier de variables correspondant (`dev/dev.tfvars` ou `prod/prod.tfvars`).
+Commandes locales rapides (exemple `dev`) :
+
+```bash
+terraform init -backend-config="bucket=bucket_tfstate" -backend-config="prefix=stockage_de_TFstate/dev"
+terraform plan -var-file=dev/dev.tfvars
+terraform apply -var-file=dev/dev.tfvars
+```
+
+Remplace `dev` par `prod` pour travailler sur l'environnement de production.
 
