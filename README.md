@@ -41,8 +41,6 @@ Pour supprimer l'infrastructure, vous devez déclencher la pipeline manuellement
 **Comment utiliser la pipeline pour dev ou prod**
 
 - Pour lancer depuis l'interface GitHub Actions, cliquez sur **Run workflow** et choisissez l'input `env` (`dev` ou `prod`).
-Le workflow initialisera Terraform en passant le `bucket` et le `prefix` via `-backend-config` (donc le backend est défini par la pipeline). Il utilisera le fichier de variables correspondant (`dev/dev.tfvars` ou `prod/prod.tfvars`).
-Commandes locales rapides (exemple `dev`) :
 
 ```bash
 terraform init -backend-config="bucket=bucket_tfstate" -backend-config="prefix=stockage_de_TFstate/dev"
